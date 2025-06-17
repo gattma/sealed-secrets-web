@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bakito/sealed-secrets-web/pkg/seal"
+	"github.com/gattma/sealed-secrets-web/pkg/seal"
 	"github.com/gin-gonic/gin"
 )
 

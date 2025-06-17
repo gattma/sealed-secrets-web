@@ -203,3 +203,13 @@ extraContainers: []
 #     name: oauth-metrics
 #     protocol: TCP
 #   resources: {}
+
+redis:
+  auth:
+    enabled: false
+  replica:
+    replicaCount: 0
+
+dex:
+  storage:
+    type: memory

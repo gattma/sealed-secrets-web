@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	. "github.com/bakito/sealed-secrets-web/pkg/test"
+	. "github.com/gattma/sealed-secrets-web/pkg/test"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

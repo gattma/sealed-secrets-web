@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/bakito/sealed-secrets-web/pkg/config"
-	"github.com/bakito/sealed-secrets-web/pkg/version"
+	"github.com/gattma/sealed-secrets-web/pkg/config"
+	"github.com/gattma/sealed-secrets-web/pkg/version"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

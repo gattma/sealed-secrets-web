@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"fmt"
 	"html/template"
@@ -11,15 +12,22 @@ import (
 	"os"
 	"time"
 
-	"github.com/bakito/sealed-secrets-web/pkg/config"
-	"github.com/bakito/sealed-secrets-web/pkg/handler"
-	"github.com/bakito/sealed-secrets-web/pkg/seal"
-	"github.com/bakito/sealed-secrets-web/pkg/version"
 	ssClient "github.com/bitnami-labs/sealed-secrets/pkg/client/clientset/versioned/typed/sealedsecrets/v1alpha1"
+	authConfig "github.com/gattma/sealed-secrets-web/pkg/auth/config"
+	auth "github.com/gattma/sealed-secrets-web/pkg/auth/dex"
+	authHandler "github.com/gattma/sealed-secrets-web/pkg/auth/handler"
+	"github.com/gattma/sealed-secrets-web/pkg/auth/middleware"
+	"github.com/gattma/sealed-secrets-web/pkg/auth/store"
+	"github.com/gattma/sealed-secrets-web/pkg/config"
+	"github.com/gattma/sealed-secrets-web/pkg/handler"
+	"github.com/gattma/sealed-secrets-web/pkg/seal"
+	"github.com/gattma/sealed-secrets-web/pkg/version"
 	"github.com/gin-gonic/gin"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -51,6 +59,12 @@ func main() {
 		log.Fatalf("Could not read the config: %s", err.Error())
 	}
 
+	authConf, err := authConfig.LoadFromEnv()
+	if err != nil {
+		log.Fatalf("Could not read the auth config: %s", err.Error())
+		return
+	}
+
 	if cfg.PrintVersion {
 		fmt.Println(version.Print("sealed secrets web"))
 		return
@@ -65,15 +79,31 @@ func main() {
 		log.Fatalf("Setup sealer: %s", err.Error())
 	}
 
+	// auth
+	ctx := context.Background()
+	authClient, err := auth.New(ctx, authConf.Auth)
+	if err != nil {
+		log.Fatalf("failed to initialize auth client : %v", err)
+	}
+	rdb := redis.NewClient(authConf.RedisClient)
+	sessionStore := store.NewSessionRedisManager(rdb)
+	authMiddleware := middleware.NewAuthMiddleware(
+		ctx,
+		authClient,
+		sessionStore,
+	)
+
 	log.Printf("Running sealed secrets web (%s) on port %d", version.Version, cfg.Web.Port)
-	_ = setupRouter(coreClient, ssc, cfg, sealer).Run(fmt.Sprintf(":%d", cfg.Web.Port))
+	_ = setupRouter(ctx, coreClient, ssc, cfg, sealer, authMiddleware).Run(fmt.Sprintf(":%d", cfg.Web.Port))
 }
 
 func setupRouter(
+	ctx context.Context,
 	coreClient corev1.CoreV1Interface,
 	ssClient ssClient.BitnamiV1alpha1Interface,
 	cfg *config.Config,
 	sealer seal.Sealer,
+	authMiddleware *middleware.AuthMiddleware,
 ) *gin.Engine {
 	indexHTML, err := renderIndexHTML(cfg)
 	if err != nil {
@@ -87,23 +117,60 @@ func setupRouter(
 	if cfg.Web.Logger {
 		r.Use(gin.LoggerWithFormatter(ginLogFormatter()))
 	}
+
+	// TODO extract?
+	aConfig, err := authConfig.LoadFromEnv()
+	if err != nil {
+		log.Fatalf("failed to load env file config : %v", err)
+	}
+
+	authClient, err := auth.New(ctx, aConfig.Auth)
+	if err != nil {
+		log.Fatalf("failed to initialize auth client : %v", err)
+	}
+
+	redisClient := redis.NewClient(aConfig.RedisClient)
+	authStore := store.NewAuthRedisManager(redisClient)
+	sessionStore := store.NewSessionRedisManager(redisClient)
+	ah := authHandler.NewAuthHandler(authClient, authStore, sessionStore)
+	// ------------
 	h := handler.New(indexHTML, sealer, cfg)
 
-	r.GET("/", h.Index)
-	r.StaticFS("/static", http.FS(staticFS))
+	r.GET("/", h.ShowLoginPage) // TODO logout page
 	r.GET("/_health", h.Health)
 
+	protected := r.Group("/")
+	protected.Use(authMiddleware.RequireAuth())
+	{
+		protected.GET("/dashboard", h.Index)
+	}
+
+	// TODO --------
+	// Auth routes will be added later
+	auth := r.Group("/auth")
+	{
+		auth.GET("/login", ah.LoginHandler)
+		auth.GET("/callback", ah.CallbackHandler)
+	}
+	// ---------------
+
+	r.StaticFS("/static", http.FS(staticFS))
+	r.LoadHTMLGlob("./templates/*.*")
+
+	// TODO authentication
 	api := r.Group("/api")
+	api.Use(authMiddleware.RequireAuth())
+	{
+		api.GET("/version", h.Version)
+		api.POST("/raw", h.Raw)
+		api.GET("/certificate", h.Certificate)
+		api.POST("/kubeseal", h.KubeSeal)
+		api.POST("/dencode", h.Dencode)
+		api.POST("/validate", h.Validate)
 
-	api.GET("/version", h.Version)
-	api.POST("/raw", h.Raw)
-	api.GET("/certificate", h.Certificate)
-	api.POST("/kubeseal", h.KubeSeal)
-	api.POST("/dencode", h.Dencode)
-	api.POST("/validate", h.Validate)
-
-	api.GET("/secret/:namespace/:name", sHandler.Secret)
-	api.GET("/secrets", sHandler.AllSecrets)
+		api.GET("/secret/:namespace/:name", sHandler.Secret)
+		api.GET("/secrets", sHandler.AllSecrets)
+	}
 
 	r.NoRoute(h.RedirectToIndex(cfg.Web.Context))
 	return r

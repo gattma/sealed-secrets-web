@@ -12,14 +12,14 @@ ENV GO111MODULE=on \
 
 COPY . /go/src/app/
 
-RUN go build -a -installsuffix cgo -ldflags="-w -s -X github.com/bakito/sealed-secrets-web/pkg/version.Version=${VERSION} -X github.com/bakito/sealed-secrets-web/pkg/version.Build=${BUILD}" -o sealed-secrets-web . && \
+RUN go build -a -installsuffix cgo -ldflags="-w -s -X github.com/gattma/sealed-secrets-web/pkg/version.Version=${VERSION} -X github.com/gattma/sealed-secrets-web/pkg/version.Build=${BUILD}" -o sealed-secrets-web . && \
     upx -q sealed-secrets-web
 
 # application image
 FROM alpine:latest
 WORKDIR /opt/go
 
-LABEL maintainer="bakito <github@bakito.ch>" \
+LABEL maintainer="gattma" \
       org.opencontainers.image.description="A web interface for Sealed Secrets by Bitnami."
 EXPOSE 8080
 RUN apk add --no-cache dumb-init

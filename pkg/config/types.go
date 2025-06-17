@@ -192,7 +192,7 @@ func newFlags() *flags {
 		printVersion: flag.Bool("version", false, "Print version information and exit"),
 		port: flag.Int(
 			"port",
-			8080,
+			8081,
 			"Define the port to run the application on. (default: 8080)",
 		),
 		config: flag.String("config", "", "Define the config file"),

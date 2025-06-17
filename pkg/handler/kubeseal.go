@@ -15,7 +15,7 @@ func (h *Handler) KubeSeal(c *gin.Context) {
 	if done {
 		return
 	}
-
+	log.Printf("Request %s", c.Request.Body)
 	ss, err := h.sealer.Seal(outputFormat, c.Request.Body)
 	if err != nil {
 		log.Printf("Error in %s: %v\n", Sanitize(c.Request.URL.Path), err)

@@ -3,9 +3,9 @@ package handler
 import (
 	"net/http"
 
-	"github.com/bakito/sealed-secrets-web/pkg/config"
-	"github.com/bakito/sealed-secrets-web/pkg/seal"
-	"github.com/bakito/sealed-secrets-web/pkg/version"
+	"github.com/gattma/sealed-secrets-web/pkg/config"
+	"github.com/gattma/sealed-secrets-web/pkg/seal"
+	"github.com/gattma/sealed-secrets-web/pkg/version"
 	"github.com/gin-gonic/gin"
 )
 

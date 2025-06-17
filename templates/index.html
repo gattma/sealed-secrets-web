@@ -1,306 +1,134 @@
-<!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Sealed Secrets</title>
-
-  <link rel="shortcut icon" type="image/x-icon" href="{{.WebContext}}static/icons/favicon.ico">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="stylesheet" href="{{.WebContext}}static/styles/roboto.css">
-  <link rel="stylesheet" href="{{.WebContext}}static/styles/material-icons.css">
-  <link rel="stylesheet" href="{{.WebContext}}static/styles/materialdesignicons.css">
-  <link rel="stylesheet" href="{{.WebContext}}static/styles/vuetify.min.css">
+    <meta charset="UTF-8">
+    <title>Sealed Secrets Web</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/styles/main.css">
+    <link rel="stylesheet" type="text/css" href="../static/styles/modal.css">
+    <link rel="stylesheet" type="text/css" href="../static/styles/snackbar.css">
+    <link rel="icon" type="image/x-icon" href="../static/icons/favicon.ico">
 </head>
+
 <body>
-  <div id="app">
-    <v-app>
-      <v-app-bar app color="primary" dark>
-        <v-toolbar-title>Sealed Secrets</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-btn @click="dencode" text>Encode / Decode</v-btn>
-        {{ if eq .DisableLoadSecrets false}}<v-btn @click="loadSecrets" text>Secrets</v-btn>{{end}}
-        <v-btn @click="seal" text>Seal</v-btn>
-        {{ if eq .DisableValidateSecrets false}}
-        <v-btn @click="validate" text>Validate</v-btn>{{end}}
-      </v-app-bar>
+    <div class="header">
+        <div class="logo">Sealed Secrets</div>
+        <div class="nav">
+            <a class="nav-item" id="secrets-btn">Secrets</a>
+        </div>
+    </div>
 
-      <v-main>
-        <v-container fluid fill-height grid-list-xl>
-          <v-layout wrap>
-            <v-flex xs6>
-              <v-card height="100%">
-                <v-card-title>Secret
-                  <v-spacer></v-spacer>
-                  <v-btn icon @click="copySecret">
-                    <v-icon>mdi-content-copy</v-icon>
-                  </v-btn>
-                  <v-select :items="['yaml', 'json']" hide-details="true" v-model="secretFormat" v-on:change="changeSecretFormat" dense solo style="max-width: 100px; margin-left: 20px;"></v-select>
-                </v-card-title>
-                <v-card-text style="height: calc(100% - 56px)">
-                  <div id="editor1" style="width: 100%; height: 100%;"></div>
-                </v-card-text>
-              </v-card>
-            </v-flex>
-            <v-flex xs6>
-              <v-card height="100%">
-                <v-card-title>Sealed Secret
-                  <v-spacer></v-spacer>
-                  <v-btn icon @click="copySealedSecret">
-                    <v-icon>mdi-content-copy</v-icon>
-                  </v-btn>
-                  <v-select :items="['yaml', 'json']" hide-details="true" v-model="sealedSecretFormat" v-on:change="changeSealedSecretFormat" dense solo style="max-width: 100px; margin-left: 20px;"></v-select>
-                </v-card-title>
-                <v-card-text style="height: calc(100% - 56px)">
-                  <div id="editor2" style="width: 100%; height: 100%;"></div>
-                </v-card-text>
-              </v-card>
-            </v-flex>
-          </v-layout>
-        </v-container>
-      </v-main>
+    <div class="main-container">
+        <div class="input-container">
+            <div class="input-group">
+                <div class="input-header">Secret</div>
+                <div class="textarea-container">
+                    <textarea id="secretTextarea" class="input-field"
+                        placeholder="Enter your secret here..."></textarea>
+                    <div class="integrated-buttons">
+                        <button id="encDec-btn" class="toggle-btn integrated-btn">Encode / Decode</button>
+                    </div>
+                </div>
+            </div>
 
-      <v-dialog v-model="showDialog">
-        <v-card>
-          <v-card-title class="headline" primary-title>Secrets</v-card-title>
-          <v-card-text>
-            <v-list>
-              <v-list-item v-for="sec in secrets" :key="sec.name + '_' + sec.namespace" @click="loadSecret(sec.namespace, sec.name)">
-                <v-list-item-content>
-                  <v-list-item-title>{{"{{sec.name}}"}}</v-list-item-title>
-                </v-list-item-content>
-                <v-list-item-icon>
-                  <v-chip color="primary">{{"{{sec.namespace}}"}}</v-chip>
-                </v-list-item-icon>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-dialog>
+            <div class="input-group">
+                <div class="input-header">Sealed Secret</div>
+                <div class="textarea-container">
+                    <textarea id="sealedTextarea" class="input-field no-padding"
+                        placeholder="Your sealed secret will appear here..." readonly></textarea>
+                    <div class="integrated-buttons">
+                        <button id="copy-btn" class="toggle-btn integrated-btn">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-      <v-snackbar :bottom="true" :multi-line="true" :right="true" :timeout="5000" v-model="snackbar" :color="messageType">
-          {{"{{message}}"}}
-        <v-btn @click="message = ''" dark text>Close</v-btn>
-      </v-snackbar>
-    </v-snackbar>
-      <v-footer color="primary" padless >
-          <v-col class="primary py-1 text-center white--text text-caption" cols="12" >
-            Sealed Secrets Web ({{.Version}})
-            <v-btn text icon color="blue lighten-2" href="https://github.com/bakito/sealed-secrets-web" target="_blank" >
-              <v-icon>mdi-github</v-icon>
-            </v-btn>
-          </v-col>
-      </v-footer>
-    </v-app>
-  </div>
+        <div class="action-buttons">
+            <button id="seal-btn" class="action-button">Seal</button>
+        </div>
+    </div>
 
-  <script src="{{.WebContext}}static/scripts/vue.min.js"></script>
-  <script src="{{.WebContext}}static/scripts/vuetify.min.js"></script>
-  <script src="{{.WebContext}}static/scripts/axios.min.js"></script>
-  <script src="{{.WebContext}}static/scripts/yaml.min.js"></script>
-  <script src="{{.WebContext}}static/ace/ace.js"></script>
-  <script>
-    const INITIAL_SECRET = "{{.InitialSecret}}"
-    new Vue({
-      el: '#app',
-      vuetify: new Vuetify(),
-      data () {
-        return {
-          secrets: Object,
-          dialogVisible: false,
-          message: '',
-          messageType: '',
-          successMessage: '',
-          showSuccess: false,
-          editor1: Object,
-          editor2: Object,
-          editor1Content: INITIAL_SECRET,
-          editor2Content: '',
-          secretFormat: 'yaml',
-          sealedSecretFormat: 'yaml',
-          options: {
-            selectionStyle: "line",
-            highlightActiveLine: true,
-            highlightSelectedWord: false,
-            readOnly: false,
-            cursorStyle: "ace",
-            behavioursEnabled: true,
-            wrapBehavioursEnabled: true,
-            autoScrollEditorIntoView: false,
-            copyWithEmptySelection: false,
-            navigateWithinSoftTabs: true,
-            enableMultiselect: false,
-            showPrintMargin: false,
-            newLineMode: "unix",
-            useSoftTabs: true,
-            tabSize: 2,
-            displayIndentGuides: true,
-          }
-        }
-      },
-      computed: {
-        snackbar: {
-          get() {
-            return this.message !== ''
-          },
-          set(newValue) {
-            if (newValue === false) {
-              this.message = ''
-            }
-          }
-        },
-        showDialog: {
-          get() {
-            return this.dialogVisible
-          },
-          set(newValue) {
-            this.dialogVisible = newValue
-          }
-        }
-      },
-      mounted () {
-        this.editor1 = window.ace.edit('editor1')
-        this.editor1.setValue(this.editor1Content, 1)
-        this.editor1.setOptions(this.options)
-        this.editor1.getSession().setMode('ace/mode/yaml')
-        this.editor1.setTheme('ace/theme/dracula')
-        this.editor1.on('change', () => {
-          this.editor1Content = this.editor1.getValue()
-        })
+    <!-- Secrets Modal -->
+    <div class="modal-overlay" id="secrets-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Your Secrets</div>
+                <button class="modal-close" id="close-modal">&times;</button>
+            </div>
+            <div class="secrets-list">
+                <!-- Secrets will be dynamically loaded here -->
+                <div class="no-secrets"></div>
+            </div>
+        </div>
+    </div>
 
-        this.editor2 = window.ace.edit('editor2')
-        this.editor2.setValue(this.editor2Content, 1)
-        this.editor2.setOptions(this.options)
-      this.editor2.getSession().setMode('ace/mode/yaml')
-        this.editor2.setTheme('ace/theme/dracula')
-        this.editor2.on('change', () => {
-          this.editor2Content = this.editor2.getValue()
-        })
-      },
-      methods : {
-        seal() {
-          axios.post('{{.WebContext}}api/kubeseal', this.editor1Content,
-            { headers: {
-                'Content-Type': this.contentType(this.secretFormat),
-                'Accept': this.contentType(this.sealedSecretFormat)},
-              transformResponse: (r) => r}
-          ).then(res => {
-            this.editor2Content = res.data
-            this.editor2.setValue(this.editor2Content, 1)
-          }).catch(err => {
-            this.messageType = 'error'
-            this.message = err.response.data
-          });
-        },
-        loadSecrets() {
-          axios.get('{{.WebContext}}api/secrets').then(res => {
-            this.secrets = res.data.secrets
-            this.dialogVisible = true
-          }).catch(err => {
-            this.messageType = 'error'
-            this.message = err.response.data
-          });
-        },
-        loadSecret(namespace, name) {
-          axios.get("{{.WebContext}}api/secret/" + namespace + "/" + name,
-            { headers: {
-                'Accept': this.contentType(this.secretFormat)},
-              transformResponse: (r) => r},
-          ).then(res => {
-            this.editor1Content = res.data
-            this.editor1.setValue(this.editor1Content, 1)
-            this.dialogVisible = false
-          }).catch(err => {
-            this.messageType = 'error'
-            this.message = err.response.data
-          });
-        },
-        dencode() {
-          axios.post('{{.WebContext}}api/dencode', this.editor1Content,
-            { headers: {
-                'Content-Type': this.contentType(this.secretFormat),
-                'Accept': this.contentType(this.secretFormat)},
-              transformResponse: (r) => r}
-          ).then(res => {
-            this.editor1Content = res.data
-            this.editor1.setValue(this.editor1Content, 1)
-          }).catch(err => {
-            this.messageType = 'error'
-            this.message = err.response
-          });
-        },
-        changeSecretFormat(selected) {
-          this.editor1.getSession().setMode('ace/mode/'+selected)
-          try{
-            if (selected === "json") {
-              this.editor1Content = JSON.stringify(YAML.parse(this.editor1Content), null, 2)
-            } else {
-              this.editor1Content = YAML.stringify(JSON.parse(this.editor1Content), null, 2)
-            }
-            this.editor1.setValue(this.editor1Content, 1)
-          } catch (err) {
-            this.messageType = 'error'
-            this.message = err
-          }
-        },
-        changeSealedSecretFormat(selected) {
-          this.editor2.getSession().setMode('ace/mode/'+selected)
-          try{
-            if (selected === "json") {
-              this.editor2Content = JSON.stringify(YAML.parse(this.editor2Content), null, 2)
-            } else {
-              this.editor2Content = YAML.stringify(JSON.parse(this.editor2Content), null, 2)
-            }
-            this.editor2.setValue(this.editor2Content, 1)
-          } catch (err) {
-            this.messageType = 'error'
-            this.message = err
-          }
-        },
-        contentType(c) {
-          if (c === "json") {
-            return 'application/json'
-          }
-          return 'application/yaml'
-        },
-        validate() {
-          axios.post('{{.WebContext}}api/validate', this.editor2Content, {
-            headers: {
-                'Content-Type': this.contentType(this.secretFormat),
-                'Accept': 'text/plain'
-            },
-            transformResponse: (r) => r
-          }).then(res => {
-            this.messageType = 'success'
-            this.message = 'Sealed secret is valid'
-          }).catch(err => {
-            this.messageType = 'error'
-            this.message = err.response.data
-          });
-        },
-        copySecret() {
-            const text = this.editor1.getValue();
-            navigator.clipboard.writeText(text).then(() => {
-              this.messageType = 'success';
-              this.message = 'Secret copied to clipboard';
-            }).catch(err => {
-              this.messageType = 'error';
-              this.message = 'Failed to copy: ' + err;
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const secretsBtn = document.getElementById('secrets-btn');
+            const secretsModal = document.getElementById('secrets-modal');
+            const closeModal = document.getElementById('close-modal');
+            const sealBtn = document.getElementById('seal-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const secretTextarea = document.getElementById('secretTextarea');
+            const encDecBtn = document.getElementById('encDec-btn');
+
+            // Open modal when clicking on Secrets in header
+            secretsBtn.addEventListener('click', function () {
+                secretsModal.classList.add('active');
+                fetchSecrets(); // Fetch secrets when modal opens
             });
-        },
-        copySealedSecret() {
-            const text = this.editor2.getValue();
-            navigator.clipboard.writeText(text).then(() => {
-              this.messageType = 'success';
-              this.message = 'Sealed Secret copied to clipboard';
-            }).catch(err => {
-              this.messageType = 'error';
-              this.message = 'Failed to copy: ' + err;
+
+            // Close modal when clicking on X
+            closeModal.addEventListener('click', function () {
+                secretsModal.classList.remove('active');
             });
-        }
-      }
-    })
-  </script>
+
+            // Close modal when clicking outside
+            secretsModal.addEventListener('click', function (e) {
+                if (e.target === secretsModal) {
+                    secretsModal.classList.remove('active');
+                }
+            });
+
+            sealBtn.addEventListener('click', function () {
+                seal();
+            });
+
+            copyBtn.addEventListener('click', function () {
+                console.log('Copying sealed secret to clipboard...');
+                navigator.clipboard.writeText(document.querySelectorAll('.input-field')[1].value)
+                    .then(() => {
+                        showSnackbar('Sealed secret copied to clipboard!', 'success');
+                    })
+                    .catch(err => {
+                        showSnackbar('Failed to copy: ' + err, 'error');
+                    });
+            });
+
+            // Event listeners
+            encDecBtn.addEventListener('click', toggleEncodeDecode);
+
+            secretsBtn.addEventListener('click', () => {
+                secretsModal.classList.add('active');
+            });
+
+            closeModal.addEventListener('click', () => {
+                secretsModal.classList.remove('active');
+            });
+
+            secretsModal.addEventListener('click', (e) => {
+                if (e.target === secretsModal) {
+                    secretsModal.classList.remove('active');
+                }
+            });
+
+        });
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="../static/scripts/actions.js"></script>
+    <script type="text/javascript" src="../static/scripts/snackbar.js"></script>
 </body>
+
 </html>

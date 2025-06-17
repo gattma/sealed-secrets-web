@@ -1,0 +1,135 @@
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    background: rgba(10, 20, 10, 0.97);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 64, 0, 0.37);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    padding: 24px;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #00ff88;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #00ff88;
+}
+
+
+.secrets-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.secret-item {
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    border-left: 3px solid rgba(0, 255, 136, 0.4);
+}
+
+.secret-item:hover {
+    background: rgba(0, 255, 136, 0.1);
+    transform: translateX(4px);
+}
+
+.secret-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.secret-name {
+    font-weight: 600;
+    color: #00ff88;
+}
+
+
+.secret-date {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.secret-preview {
+    color: #ccc;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.no-secrets {
+    text-align: center;
+    padding: 32px;
+    color: #aaa;
+}
+
+.no-secrets-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}

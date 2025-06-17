@@ -1,12 +1,21 @@
-apiVersion: v2
-appVersion: v3.1.7
+apiVersion: v3
+appVersion: v4.0.0
 description: A web interface for Sealed Secrets by Bitnami.
-home: https://github.com/bakito/sealed-secrets-web
-icon: https://raw.githubusercontent.com/bakito/sealed-secrets-web/master/assets/logo.png
+home: https://github.com/gattma/sealed-secrets-web.git
+icon: https://raw.githubusercontent.com/gattma/sealed-secrets-web/master/assets/logo.png
 maintainers:
   - name: bakito
     url: https://github.com/bakito
 name: sealed-secrets-web
-version: 3.1.7
+version: 5.0.0
 sources:
-  - https://github.com/bakito/sealed-secrets-web
+  - https://github.com/gattma/sealed-secrets-web
+
+dependencies:
+  - name: dex
+    version: 0.23.0
+    repository: https://charts.dexidp.io
+
+  - name: redis
+    version: 21.2.3
+    repository: oci://registry-1.docker.io/bitnamicharts

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/bakito/sealed-secrets-web/pkg/config"
-	"github.com/bakito/sealed-secrets-web/pkg/mocks/core"
-	"github.com/bakito/sealed-secrets-web/pkg/mocks/ssclient"
 	"github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	"github.com/gattma/sealed-secrets-web/pkg/config"
+	"github.com/gattma/sealed-secrets-web/pkg/mocks/core"
+	"github.com/gattma/sealed-secrets-web/pkg/mocks/ssclient"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"

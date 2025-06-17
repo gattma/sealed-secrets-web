@@ -1,0 +1,9 @@
+dependencies:
+- name: dex
+  repository: https://charts.dexidp.io
+  version: 0.23.0
+- name: redis
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 21.2.3
+digest: sha256:877cb2bc65e85c35f54f9cf5fa183689d7b0c83d8bb67dd4a50bf3a9bc692d5f
+generated: "2025-06-12T21:48:44.321697835+02:00"

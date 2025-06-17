@@ -1,0 +1,30 @@
+config:
+  # Set it to a valid URL
+  issuer: http://127.0.0.1:5556/dex # TODO lokal mit port forwarding
+
+  # See https://dexidp.io/docs/storage/ for more options
+  storage:
+    type: memory
+
+  # Enable at least one connector
+  # See https://dexidp.io/docs/connectors/ for more options
+  enablePasswordDB: true
+
+  staticClients:
+    - id: sealed-secrets-web
+      redirectURIs:
+        - 'http://localhost:8081/auth/callback'
+      name: 'Sealed Secrets Web'
+      secret: kZXhhbXBsZS1hcHAtc2VjcmV0
+
+  connectors:
+    - type: mockCallback
+      id: mock
+      name: Example
+
+  staticPasswords:
+  - email: "admin@example.com"
+    # bcrypt hash of the string "password": $(echo password | htpasswd -BinC 10 admin | cut -d: -f2)
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: "admin"
+    userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
