@@ -40,7 +40,7 @@ jobs:
           make helm-docs
           ./bin/helm-docs
           helm package ./chart/ --version $VERSION --app-version v$VERSION -d dist
-          helm push dist/sealed-secrets-web-${VERSION}.tgz oci://ghcr.io/bakito/helm-charts
+          helm push dist/sealed-secrets-web-${VERSION}.tgz oci://ghcr.io/gattma/charts
 
       - name: Install chart-releaser
         uses: engineerd/configurator@v0.0.10
@@ -54,5 +54,5 @@ jobs:
         env:
           CR_OWNER: "${{github.repository_owner}}"
           CR_TOKEN: "${{secrets.CR_TOKEN}}"
-          CR_GIT_REPO: "helm-charts"
+          CR_GIT_REPO: "charts"
           CR_PACKAGE_PATH: dist
