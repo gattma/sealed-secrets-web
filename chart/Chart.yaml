@@ -4,8 +4,8 @@ description: A web interface for Sealed Secrets by Bitnami.
 home: https://github.com/gattma/sealed-secrets-web.git
 icon: https://raw.githubusercontent.com/gattma/sealed-secrets-web/master/assets/logo.png
 maintainers:
-  - name: bakito
-    url: https://github.com/bakito
+  - name: gattma
+    url: https://github.com/gattma
 name: sealed-secrets-web
 version: 5.0.0
 sources:
